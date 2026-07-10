@@ -35,47 +35,46 @@
       <p class="mt-10 text-center text-sm/6 text-gray-400">
         Not a member?
         {{ ' ' }}
-        <a href="#" class="font-semibold text-indigo-400 hover:text-indigo-300">Start a 14 day free trial</a>
+        <a href="#" class="font-semibold text-indigo-400 hover:text-indigo-300">registrare</a>
       </p>
     </div>
   </div>
 </template>
-<script>
+<script setup>
 import { ref } from 'vue';
 import { auth, db } from '../firebase.js';
-import { getAuth, signInWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
-
 
 
 const email = ref('');
 const password = ref('');
 
-const handleSubmit = () => {
+const handleSubmit = async () => {
   console.log('Email:', email.value);
   console.log('Password:', password.value);
-  
-   const login = async () => {
-    try {
-      const userCredential = await signInWithEmailAndPassword(auth, email.value, password.value);
-      const user = userCredential.user;
-      console.log('User logged in:', user);
 
-     
-      const userDocRef = doc(db, 'users', user.uid);
-      const userDocSnap = await getDoc(userDocRef);
+  try {
+    // Autenticación directa con Firebase
+    const userCredential = await signInWithEmailAndPassword(auth, email.value, password.value);
+    const user = userCredential.user;
+    console.log('User logged in:', user);
 
-      if (userDocSnap.exists()) {
-        const userData = userDocSnap.data();
-        console.log('data de usuario desde firebase:', userData);
-        
-      } else {
-        console.log('No se encontraron documentos');
-      }
-    } catch (error) {
-      console.error('Error logging in:', error);
+    // Consulta en la base de datos Firestore
+    const userDocRef = doc(db, 'users', user.uid);
+    const userDocSnap = await getDoc(userDocRef);
+
+    if (userDocSnap.exists()) {
+      const userData = userDocSnap.data();
+      console.log('data de usuario desde firebase:', userData);
+      router.push('/dashboard'); 
+      
+    } else {
+      console.log('No se encontraron documentos para este usuario');
     }
-  };
-}
-
+  } catch (error) {
+    console.error('Error logging in:', error);
+    // Puedes guardar el error en una variable para mostrarlo en pantalla si lo deseas
+  }
+};
 </script>
